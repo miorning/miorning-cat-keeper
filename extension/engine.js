@@ -1,7 +1,7 @@
 (() => {
   'use strict';
   const t = (text, values) => globalThis.CatKeeperI18n?.t(text, values) ?? text;
-  if(globalThis.CatKeeperEngine?.version==='0.3.1')return;
+  if(globalThis.CatKeeperEngine?.version==='0.3.2')return;
   const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
   const easing={linear:t=>t,in:t=>t*t*t,out:t=>1-(1-t)**3,inout:t=>t<.5?4*t*t*t:1-(-2*t+2)**3/2};
   const walk=d=>Array.from({length:12},(_,i)=>`v2/walk-${d}-${i}`);
@@ -10,7 +10,7 @@
   const elder=['left','right'].flatMap(dir=>Array.from({length:12},(_,i)=>`v4/walk-${dir}-${i}`));
   const names=[...walk('right'),...walk('left'),'v2/crouch','v2/jump','v2/drop','v2/pancake','v2/rebound','v2/gesture','v2/ceiling','v2/ball-rebound','v2/tail-bottom-1','v2/tail-top-1','inhale-0','inhale-1','full-0','full-1','spit-0','spit-1'];
   class CatKeeperEngine {
-    static version='0.3.1';
+    static version='0.3.2';
     constructor({url,onActivate}){
       Object.assign(this,{url,onActivate,phase:'walk',surface:'bottom',anchor:'bottom',hidden:'none',enabled:true,busy:false,menuOpen:false,x:innerWidth*.62,anchorY:innerHeight,vx:0,dir:1,walkCycle:0,last:0,clock:0,run:0,catchUntil:0,focused:false,raf:0,destroyed:false,frameOverride:null});
       Object.assign(this,{caughtMs:0,revealWaitMs:0,locomotion:'walk',modeClock:0,modeTransition:0,rollSpin:0,tailClicks:0,tailClickAt:0,drag:null,tailStretch:0,ignoreClickUntil:0,lastWidth:innerWidth,lean:0,leanVelocity:0,proximity:'calm',pointerPosition:null,proximityDistance:Infinity,alertAt:0,alertPulse:0,escapeUntil:0,escapeCooldown:0,escapeDir:1});

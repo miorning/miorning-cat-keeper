@@ -1,12 +1,13 @@
 (() => {
   'use strict';
   const t = (text, values) => globalThis.CatKeeperI18n?.t(text, values) ?? text;
-  if (globalThis.CatKeeperDiscovery) return;
+  if (globalThis.CatKeeperDiscovery?.version === '0.3.2') return;
   const DIRECT = 'button,[role="button"],a[href],[onclick],[tabindex]:not([tabindex="-1"])';
   const MEDIA = 'img,svg,canvas';
   const REJECT = 'input,textarea,select,option,iframe,object,embed,video,audio';
   const HINT = /float|launcher|widget|assist|(^|[-_ ])fab($|[-_ ])|dock|bubble|chat[-_ ]?button|icon[-_ ]?button/i;
   const PANEL = /(^|[-_ ])(dialog|modal|panel|sidebar|drawer|toolbar|editor|navigation|navbar|menu|rail|desk)([-_ ]|$)/i;
+  const SITE_CHROME = /(^|[-_ ])(header|masthead|navbar|navigation|menubar|toolbar|breadcrumb|tabbar|footer)([-_ ]|$)/i;
   const shadow = node => {
     try { return globalThis.chrome?.dom?.openOrClosedShadowRoot(node) || node.shadowRoot; }
     catch { return node.shadowRoot; }
@@ -16,15 +17,17 @@
   const stripOwned = style => String(style || '').replace(/(?:^|;)\s*(?:opacity|pointer-events)\s*:[^;]*/gi, '').replace(/[;\s]+/g, '');
 
   class CatKeeperDiscovery {
+    static version = '0.3.2';
     constructor({ exclude, onChange = () => {} } = {}) {
       this.exclude = exclude; this.onChange = onChange;
       this.roots = new Set(); this.observers = new Map();
       this.candidates = new Set(); this.potentialHosts = new Set();
       this.seen = new WeakSet(); this.ids = new WeakMap(); this.known = new WeakSet();
+      this.panelCache = new WeakMap();
       this.pending = []; this.results = []; this.counter = 0; this.dirty = true;
       this.lastScan = -Infinity; this.lastRootPoll = 0; this.hostCursor = 0;
       this.stats = { examined: 0, candidateChecks: 0, scans: 0, cachedCalls: 0, truncated: false };
-      this.limitations = [t('跨域 iframe 内的按钮不能从父页面逐项访问。'), t('同一个 canvas 内绘制的多个图标不能自动拆分。'), t('未知页面可能使用特殊浮层结构，未识别时仍可手动点选。')];
+      this.limitations = [t('跨域 iframe 内的按钮不能从父页面逐项访问。'), t('同一个 canvas 内绘制的多个图标不能自动拆分。'), t('仅收纳能确认来源的扩展悬浮入口；来源不明的按钮会保留。')];
       this.abort = new AbortController();
       const signal = this.abort.signal;
       window.addEventListener('resize', () => this.invalidate(), { passive: true, signal });
@@ -58,12 +61,13 @@
         }
         if (relevant) this.invalidate();
       });
-      observer.observe(root, { subtree: true, childList: true, attributes: true, attributeOldValue: true, attributeFilter: ['style','class','hidden','aria-hidden','aria-label','title','src','role','tabindex'] });
+      observer.observe(root, { subtree: true, childList: true, attributes: true, attributeOldValue: true, attributeFilter: ['style','class','hidden','aria-hidden','aria-label','title','src','srcset','href','xlink:href','role','tabindex'] });
       this.observers.set(root, observer);
       if (root instanceof ShadowRoot) this.pending.push(...root.children);
     }
     invalidate() {
       this.dirty = true;
+      this.panelCache = new WeakMap();
       if (this.noticeTimer || this.destroyed) return;
       this.noticeTimer = setTimeout(() => { this.noticeTimer = 0; if (!this.destroyed) this.onChange(); }, 280);
     }
@@ -118,24 +122,72 @@
       return fallback;
     }
     extensionEvidence(node) {
-      const values = [node.getAttribute('src'), node.getAttribute('data-extension-id'), getComputedStyle(node).backgroundImage];
-      for (const image of node.querySelectorAll('img,image,use')) {
-        values.push(image.getAttribute('src'), image.getAttribute('href'), image.getAttribute('xlink:href'));
-        if (values.length > 24) break;
+      if (!(node instanceof Element) || this.excluded(node)) return false;
+      const ownId = globalThis.chrome?.runtime?.id;
+      const resource = value => {
+        if (typeof value !== 'string') return false;
+        const address = value.trim().match(/^((?:chrome|moz|ms-browser)-extension):\/\/([^/?#]+)(?:[/?#]|$)/i);
+        if (!address) return false;
+        const protocol = address[1].toLowerCase(), host = address[2].toLowerCase();
+        // Chromium's URL parser silently strips user-info for extension URLs.
+        // Validate the original authority before parsing or normalizing it.
+        if (host === ownId || !(protocol === 'moz-extension' ? /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i : /^[a-p]{32}$/i).test(host)) return false;
+        try {
+          const url = new URL(value.trim());
+          if (url.username || url.password || url.port || url.hostname === ownId) return false;
+          if (url.protocol === 'chrome-extension:' || url.protocol === 'ms-browser-extension:') return /^[a-p]{32}$/i.test(url.hostname);
+          return url.protocol === 'moz-extension:' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(url.hostname);
+        } catch { return false; }
+      };
+      const direct = element => {
+        if (element.matches('img')) {
+          if (resource(element.getAttribute('src'))) return true;
+          // currentSrc may normalize a malformed URL (including stripping user
+          // info), so accept it only when an exact valid srcset entry supplied it.
+          const chosen = element.currentSrc;
+          if (resource(chosen) && String(element.getAttribute('srcset') || '').split(',').some(entry => {
+            const source = entry.trim().split(/\s+/)[0];
+            return source === chosen && resource(source);
+          })) return true;
+        }
+        if (element.matches('image,use') && (resource(element.getAttribute('href')) || resource(element.getAttribute('xlink:href')))) return true;
+        const background = getComputedStyle(element).backgroundImage;
+        for (const match of background.matchAll(/url\(\s*(?:"([^"]*)"|'([^']*)'|([^)]*))\s*\)/gi)) {
+          if (resource(match[1] ?? match[2] ?? match[3])) return true;
+        }
+        return false;
+      };
+      if (direct(node)) return true;
+      // Only inspect artwork owned by this launcher. Resource strings in an
+      // ancestor, sibling button, data attribute or destination link prove
+      // nothing about the current element's origin.
+      if (!node.matches(DIRECT) && node.querySelector(DIRECT)) return false;
+      const pending = [...node.children].map(child => [child, 1]);
+      let examined = 0;
+      while (pending.length && examined++ < 32) {
+        const [child, depth] = pending.pop();
+        if (child.matches(DIRECT + ',' + REJECT)) continue;
+        if (direct(child)) return true;
+        if (depth < 3) for (const descendant of child.children) pending.push([descendant, depth + 1]);
       }
-      return values.some(value => typeof value === 'string' && /(?:chrome|moz|ms-browser)-extension:\/\//i.test(value));
+      return false;
     }
-    qualify(node) {
+    qualify(node, { trustedExtension = false } = {}) {
+      if (!(node instanceof Element) || !node.isConnected || this.excluded(node) || node.matches(REJECT)) return null;
       const rect = node.getBoundingClientRect();
       if (!small(rect) || rect.right <= 0 || rect.bottom <= 0 || rect.left >= innerWidth || rect.top >= innerHeight) return null;
       const selfStyle = getComputedStyle(node);
       if (selfStyle.display === 'none' || selfStyle.visibility === 'hidden' || (Number(selfStyle.opacity) === 0 && !this.known.has(node))) return null;
-      let fixed = null, sticky = null, layer = null, extension = this.extensionEvidence(node);
+      // Geometry alone cannot distinguish a site's avatar/message/help button
+      // from an injected launcher. Unknown provenance always stays on the page.
+      if (!trustedExtension && !this.extensionEvidence(node)) return null;
+      let fixed = null, sticky = null, layer = null;
       for (let current = node, depth = 0; current && depth < 32; current = parent(current), depth++) {
         if (this.excluded(current) || current.matches(REJECT + ',dialog,[role="dialog"],[role="alertdialog"],[contenteditable="true"],nav,header,footer,[role="navigation"],[role="menubar"],[role="toolbar"],[role="menu"],[role="listbox"]')) return null;
         const cs = current === node ? selfStyle : getComputedStyle(current);
         if (cs.display === 'none' || cs.visibility === 'hidden' || current.hidden) return null;
         const r = current === node ? rect : current.getBoundingClientRect();
+        if (current !== node && (r.width > 220 || r.height > 220) && SITE_CHROME.test(current.id + ' ' + current.getAttribute('class'))) return null;
         if (current !== node && (r.width > 220 || r.height > 220) && PANEL.test(current.id + ' ' + current.getAttribute('class'))) return null;
         if (current !== node && !current.matches('html,body') && r.width > 120 && r.height > 75) {
           if (!this.panelCache.has(current)) {
@@ -150,17 +202,12 @@
         if (cs.position === 'fixed' && !fixed) fixed = current;
         if (cs.position === 'sticky' && !sticky) sticky = current;
         if (!layer && (cs.position === 'fixed' || cs.position === 'absolute') && r.width <= 240 && r.height <= 240) layer = { node: current, z: Number(cs.zIndex) || 0 };
-        // Known extension URL on a small enclosing art wrapper is usable evidence,
-        // but never inspect arbitrarily large page ancestors for resource strings.
-        if (!extension && current !== node && depth <= 3 && r.width <= 220 && r.height <= 220) extension = this.extensionEvidence(current);
       }
-      if (!fixed && !sticky && !(extension && layer)) return null;
+      if (!fixed && !sticky && !(layer && (layer.z >= 100 || layer.node.getRootNode() instanceof ShadowRoot))) return null;
       const margin = Math.min(130, Math.max(64, Math.min(innerWidth, innerHeight) * .12));
       const edge = rect.left <= margin || innerWidth - rect.right <= margin || rect.top <= margin || innerHeight - rect.bottom <= margin;
-      const isolatedLayer = layer && (layer.z >= 100 || layer.node.getRootNode() instanceof ShadowRoot);
-      if (!edge && !extension && !isolatedLayer) return null;
       if (sticky && !fixed && !edge) return null;
-      return { node, score: (extension ? 50 : 0) + (node.matches('button,[role="button"],a[href]') ? 25 : 5) + (edge ? 15 : 0) + (fixed ? 10 : 0), source: extension ? 'extension-resource' : 'floating-geometry' };
+      return { node, score: 50 + (node.matches('button,[role="button"],a[href]') ? 25 : 5) + (edge ? 15 : 0) + (fixed ? 10 : 0), source: trustedExtension ? 'extension-adapter' : 'extension-resource' };
     }
     name(node, serial) {
       for (let current = node, i = 0; current && i < 4; i++, current = parent(current)) {
@@ -175,7 +222,7 @@
     discover() {
       if (this.destroyed) return [];
       const now = performance.now(); this.pollRoots(now); this.pump();
-      if (!this.dirty || (now - this.lastScan < 180 && this.results.length)) { this.stats.cachedCalls++; return this.results.filter(item => item.node.isConnected); }
+      if (!this.dirty || (now - this.lastScan < 180 && this.results.length)) { this.stats.cachedCalls++; return this.results.filter(item => item.node.isConnected && this.extensionEvidence(item.node)); }
       this.lastScan = now; this.dirty = false; this.stats.scans++; this.panelCache = new WeakMap();
       const seen = new Set(), qualified = []; let count = 0;
       for (const seed of this.candidates) {

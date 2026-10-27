@@ -1,7 +1,7 @@
-喵咛·收纳猫 0.3.1
+喵咛·收纳猫 0.3.2
 
-下载：https://github.com/miorning/miorning-cat-keeper/releases/tag/v0.3.1
-安装包：MiorningCatKeeper-v0.3.1-Chrome-Edge.zip
+下载：https://github.com/miorning/miorning-cat-keeper/releases/tag/v0.3.2
+安装包：MiorningCatKeeper-v0.3.2-Chrome-Edge.zip
 校验文件：SHA256SUMS.txt
 
 安装包包含插件运行文件及中英说明、隐私和许可证文档，图片采用无损压缩。无需编译或安装依赖。
@@ -25,7 +25,11 @@ Alt + Shift + H：隐藏 / 显示
 
 同一浏览器资料跨页面保存收纳、藏尾位置与图标显示偏好；右键设置里勾选“显示”可让特定入口在以后收纳时仍然保留。
 
-中英界面按浏览器语言选择。原插件仍运行并处理自己的快捷键。收纳不限五款，漏识别可在设置中手动点选；iframe / canvas 内部不保证可访问。工具栏图标需自己取消固定，不属于网页收纳范围。
+中英界面按浏览器语言选择。原插件仍运行并处理自己的快捷键。
+
+0.3.2 修复误收网站自带控件的问题。只有命中已知适配规则，或能确认扩展来源的小型悬浮入口才参与收纳。网站自己的头像、消息、客服、导航等不作为收纳目标。手动点选与旧规则也需要通过同样检查；仅用内联图形、无法确认来源的未知入口会跳过。支持不限五款，但不保证覆盖所有扩展。
+
+iframe / canvas 内部不保证可访问。工具栏图标需自己取消固定，不属于网页收纳范围。更新后请重新加载扩展并刷新受影响的网页。
 
 说明：extension/welcome.html、README.md
 English: README.en.md / GETTING_STARTED.en.txt

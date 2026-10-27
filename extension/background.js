@@ -45,6 +45,15 @@ function sharedRequest(message) {
 }
 
 async function inject(tabId) {
+  // On an in-place extension update, let the prior content instance restore
+  // its owned opacity/inert changes before loading the stricter classifier.
+  await chrome.scripting.executeScript({target:{tabId,frameIds:[0]},func:()=>{
+    if(globalThis.__miorningCatKeeper?.version==='0.3.2')return;
+    try{globalThis.__miorningCatKeeper?.cleanup?.();}catch{}
+    globalThis.document?.querySelectorAll('miorning-cat-keeper').forEach(node=>node.remove());
+    delete globalThis.__miorningCatKeeper;
+    for(const key of ['CatKeeperDiscovery','CatKeeperControls','CatKeeperEngine','CatKeeperI18n'])delete globalThis[key];
+  }});
   return chrome.scripting.executeScript({ target: { tabId, frameIds: [0] }, files: SCRIPTS });
 }
 

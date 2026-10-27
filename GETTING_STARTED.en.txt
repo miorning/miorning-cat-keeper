@@ -1,7 +1,7 @@
-Miorning Cat Keeper 0.3.1
+Miorning Cat Keeper 0.3.2
 
-Download: https://github.com/miorning/miorning-cat-keeper/releases/tag/v0.3.1
-Package: MiorningCatKeeper-v0.3.1-Chrome-Edge.zip
+Download: https://github.com/miorning/miorning-cat-keeper/releases/tag/v0.3.2
+Package: MiorningCatKeeper-v0.3.2-Chrome-Edge.zip
 Checksum file: SHA256SUMS.txt
 
 The package contains the plugin runtime and bilingual guides, privacy and license documents. Images use lossless compression. No build or dependency installation is required.
@@ -25,7 +25,11 @@ Right-click the cat / tail for shortcut settings, collect / release and hide / s
 
 Collection, hidden state, relative tail position and icon visibility choices persist across pages in the same browser profile. Check Show beside an icon in settings to keep it visible during future collections.
 
-The UI follows your browser language, Chinese or English. Original extensions keep running and handling their shortcuts. Discovery is not limited to five extensions; pick missed accessible launchers manually. Cross-origin iframe / canvas internals may be inaccessible. Toolbar icons beside the address bar must be unpinned manually; they are outside in-page scope.
+The UI follows your browser language, Chinese or English. Original extensions keep running and handling their shortcuts.
+
+Version 0.3.2 fixes website-owned controls being collected by mistake. Only small floating launchers from known adapters or with identifiable extension provenance qualify. Website avatars, messaging buttons, support widgets and navigation are not collection targets. Manual picks and saved rules must pass the same checks. Unknown launchers using only inline graphics without identifiable provenance are skipped. Support is not limited to five extensions, but does not cover every extension.
+
+Cross-origin iframe / canvas internals may be inaccessible. Toolbar icons beside the address bar must be unpinned manually; they are outside in-page scope. After updating, reload the extension and refresh affected webpages.
 
 Guide: extension/welcome.html, README.en.md
 简体中文: README.md / 先看这里.txt

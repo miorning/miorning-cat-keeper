@@ -81,6 +81,19 @@
     const r=el.getBoundingClientRect(),cs=getComputedStyle(el);
     return r.width>=4&&r.height>=4&&r.width<=360&&r.height<=360&&cs.display!=='none';
   }
+  function adapterFor(node){
+    if(!(node instanceof Element))return null;
+    const scope=node.getRootNode();
+    return CatKeeperAdapters.find(adapter=>node.matches(adapter.selector)&&(adapter.host
+      ?scope instanceof ShadowRoot&&scope.host.matches(adapter.host)
+      :scope===document))||null;
+  }
+  function eligible(node){
+    if(!meaningful(node)||!discovery)return false;
+    // Exact adapter identities may use inline artwork. Unknown launchers must
+    // prove their own extension resource origin; geometry never grants trust.
+    return !!discovery.qualify(node,{trustedExtension:!!adapterFor(node)});
+  }
   function resolvePath(path){
     let scope=document,el=null;
     for(let i=0;i<path.length;i++){
@@ -124,19 +137,22 @@
       scopes.forEach(watchRoot);
       let index=0;
       for(const scope of scopes)for(const node of safeQuery(scope,adapter.selector)){
-        if(meaningful(node))found.set(`${adapter.key}:${index++}`,{node,name:adapter.name,key:`${adapter.key}:${index-1}`,preferenceKey:`adapter:${adapter.key}`,custom:false});
+        if(eligible(node))found.set(`${adapter.key}:${index++}`,{node,name:adapter.name,key:`${adapter.key}:${index-1}`,preferenceKey:`adapter:${adapter.key}`,custom:false});
       }
     }
     for(const rule of rules){
+      if(!Array.isArray(rule.path)||!rule.path.every(part=>typeof part==='string'))continue;
       const node=resolvePath(rule.path);
-      if(meaningful(node)&&![...found.values()].some(item=>item.node===node)){
+      // Older versions allowed arbitrary page buttons in saved rules. Keep the
+      // preference, but never replay it without current extension provenance.
+      if(eligible(node)&&![...found.values()].some(item=>item.node===node)){
         let r=node.getRootNode();while(r instanceof ShadowRoot){watchRoot(r);r=r.host.getRootNode();}
         found.set(rule.key,{node,key:rule.key,name:rule.name,preferenceKey:rule.preferenceKey||preferenceKey(node),custom:true});
       }
     }
     for(const item of discovery?.discover()||[]){
       const overlap=[...found.values()].some(existing=>existing.node===item.node||existing.node.contains(item.node)||item.node.contains(existing.node));
-      if(!overlap&&meaningful(item.node))found.set(item.key,{...item,preferenceKey:preferenceKey(item.node)});
+      if(!overlap&&eligible(item.node))found.set(item.key,{...item,preferenceKey:preferenceKey(item.node)});
     }
     for(const [key,rec] of records){
       if(!found.has(key)||found.get(key).node!==rec.node){restore(rec);records.delete(key);}
@@ -149,11 +165,14 @@
     engine.controls?.refreshVisibility?.(status().targets);
   }
   function hide(rec){
-    if(rec.hidden||alwaysVisible(rec))return;
+    if(!eligible(rec.node)){restore(rec);return false;}
+    if(rec.hidden)return true;
+    if(alwaysVisible(rec))return false;
+    discovery.known.add(rec.node);
     rec.original={opacity:rec.node.style.getPropertyValue('opacity'),opacityPriority:rec.node.style.getPropertyPriority('opacity'),pointer:rec.node.style.getPropertyValue('pointer-events'),pointerPriority:rec.node.style.getPropertyPriority('pointer-events'),inert:rec.node.inert};
     rec.node.style.setProperty('opacity','0','important');
     rec.node.style.setProperty('pointer-events','none','important');
-    rec.node.inert=true;rec.hidden=true;
+    rec.node.inert=true;rec.hidden=true;return true;
   }
   function restore(rec){
     if(!rec.hidden||!rec.original)return;
@@ -206,9 +225,9 @@
       if(current!==operation)return status();
       if(collecting){
         for(const rec of list){
-          if(!rec.node.isConnected||alwaysVisible(rec))continue;
+          if(!rec.node.isConnected||alwaysVisible(rec)||!eligible(rec.node)){restore(rec);continue;}
           const rect=rec.node.getBoundingClientRect(),visual=snapshot(rec.node);
-          hide(rec);await engine.fly(visual,rect,engine.mouth(),true);
+          if(!hide(rec))continue;await engine.fly(visual,rect,engine.mouth(),true);
           if(current!==operation)return status();
         }
         engine.toast(t('收好了 {count} 个图标 · 原插件快捷键仍可使用',{count:[...records.values()].filter(rec=>rec.hidden).length}));
@@ -269,7 +288,7 @@
       if(r.width>=24&&r.height>=24)best=node;
       node=node.parentElement;
     }
-    return meaningful(best)&&best.getBoundingClientRect().width<=240&&best.getBoundingClientRect().height<=240?best:null;
+    return eligible(best)?best:null;
   }
   function cancelPick(){picking=false;pickAbort?.abort();pickAbort=null;pickBox?.remove();pickBox=null;pickTarget=null;}
   function startPick(){
@@ -277,7 +296,7 @@
     picking=true;pickAbort=new AbortController();const signal=pickAbort.signal;
     pickBox=document.createElement('div');pickBox.className='picker-box';pickBox.style.display='none';
     const label=document.createElement('span');label.className='picker-label';label.textContent=t('点此加入收纳 · Esc 取消');pickBox.append(label);engine.root.append(pickBox);
-    engine.toast(t('请点击要收纳的悬浮小图标；不要选择功能面板。按 Esc 取消。'));
+    engine.toast(t('仅可点选能确认扩展来源的悬浮图标；网站按钮不会加入。按 Esc 取消。'));
     document.addEventListener('pointermove',e=>{
       pickTarget=pickCandidate(deepAt(e.clientX,e.clientY));
       if(!pickTarget){pickBox.style.display='none';return;}
@@ -348,7 +367,7 @@
   chrome.storage.onChanged.addListener(storageListener);
   const interval=setInterval(()=>{if(!runtime.id){cleanup();return;}if(!document.hidden)scan();},2500);
   function cleanup(){dead=true;cancelPick();releaseAll();discovery?.destroy();window.removeEventListener('focus',refreshShortcuts);clearInterval(interval);clearTimeout(scanTimer);rootObservers.forEach(o=>o.disconnect());runtime.onMessage.removeListener(listener);chrome.storage.onChanged.removeListener(storageListener);engine.destroy();delete globalThis.__miorningCatKeeper;}
-  globalThis.__miorningCatKeeper={status,cleanup,inspect:()=>engine.inspect()};
+  globalThis.__miorningCatKeeper={version:'0.3.2',status,cleanup,inspect:()=>engine.inspect()};
   Promise.all([chrome.storage.local.get(['catkeeperSettings','catkeeperRules']),runtime.sendMessage({type:'catkeeper-shared',action:'get'})]).then(([data,response])=>{
     settings={...data.catkeeperSettings,enabled:data.catkeeperSettings?.enabled!==false};rules=data.catkeeperRules?.[origin]||[];
     engine.setEnabled(settings.enabled);if(response?.state&&response.state.revision>=shared.revision)applyShared(response.state,{force:true});
