@@ -1,0 +1,35 @@
+Miorning Cat Keeper 0.3.1
+
+Download: https://github.com/miorning/miorning-cat-keeper/releases/tag/v0.3.1
+Package: MiorningCatKeeper-v0.3.1-Chrome-Edge.zip
+Checksum file: SHA256SUMS.txt
+
+The package contains the plugin runtime and bilingual guides, privacy and license documents. Images use lossless compression. No build or dependency installation is required.
+
+Install in Chrome / Edge:
+Extract completely to a directory you intend to keep.
+Open chrome://extensions or edge://extensions.
+Enable Developer mode → Load unpacked.
+Select extension, the folder directly containing manifest.json.
+Refresh ordinary webpages.
+
+Update: replace files in the original installation directory, reload the existing extension and refresh pages. Do not uninstall first.
+Local HTML: enable Allow access to file URLs in extension details.
+
+Alt + Shift + K: collect / release
+Alt + Shift + H: hide / show
+
+The bottom cat normally takes very slow steps with a cane. Approach and it becomes alert and walks a little faster; get closer and it randomly rides a scooter or rolls away. Desktop warning / escape distances are approximately 480 / 300 pixels, with smaller ranges in narrow windows. Move quickly to catch it.
+
+Right-click the cat / tail for shortcut settings, collect / release and hide / show. The bottom cat hides three seconds after being caught without a click; the top cat hides after a lap. Drag a tail along the edge or pull inward to pop the cat out; it waits three seconds before moving again. A single tail click does nothing; five quick short clicks open the Bilibili Easter egg. The toolbar cat opens the same menu.
+
+Collection, hidden state, relative tail position and icon visibility choices persist across pages in the same browser profile. Check Show beside an icon in settings to keep it visible during future collections.
+
+The UI follows your browser language, Chinese or English. Original extensions keep running and handling their shortcuts. Discovery is not limited to five extensions; pick missed accessible launchers manually. Cross-origin iframe / canvas internals may be inaccessible. Toolbar icons beside the address bar must be unpinned manually; they are outside in-page scope.
+
+Guide: extension/welcome.html, README.en.md
+简体中文: README.md / 先看这里.txt
+Privacy: PRIVACY.en.md
+Complete runtime source and local assets: extension/
+
+GPL-3.0-only; full terms in LICENSE. Preserve required notices and provide corresponding source when distributing covered versions. Not listed in a browser extension store.

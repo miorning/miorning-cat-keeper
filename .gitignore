@@ -1,0 +1,16 @@
+artwork/
+qa/
+tests/
+scripts/
+research/
+publishing/
+dist/
+docs/media/
+preview*
+LOCAL_TEST*
+promo-*/
+node_modules/
+.local/
+.env
+.env.*
+*.log

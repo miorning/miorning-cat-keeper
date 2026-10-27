@@ -1,0 +1,14 @@
+{
+  "extensionName": {
+    "message": "喵咛·收纳猫 — Miorning Cat Keeper"
+  },
+  "extensionDescription": {
+    "message": "让黑猫收纳网页里的小型悬浮入口，包括插件和网站按钮。吸入变圆、贴边巡游、自动藏尾，再点一下逐个放回。"
+  },
+  "collectDescription": {
+    "message": "黑猫吸收 / 释放悬浮图标"
+  },
+  "hideDescription": {
+    "message": "黑猫隐藏 / 显示"
+  }
+}

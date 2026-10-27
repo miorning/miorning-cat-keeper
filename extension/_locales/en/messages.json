@@ -1,0 +1,14 @@
+{
+  "extensionName": {
+    "message": "Miorning Cat Keeper"
+  },
+  "extensionDescription": {
+    "message": "A black cat collects floating extension and website icons, patrols page edges, hides a waving tail, and releases icons back."
+  },
+  "collectDescription": {
+    "message": "Collect / release floating icons"
+  },
+  "hideDescription": {
+    "message": "Hide / show Cat Keeper"
+  }
+}

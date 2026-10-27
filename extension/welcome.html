@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="zh-CN" data-catkeeper-document="welcome">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>喵咛·收纳猫 — 使用说明</title>
+  <meta name="description" content="让黑猫收好浏览器页面里的悬浮图标。Chrome、Edge 本地安装与使用说明。">
+  <link rel="icon" href="assets/icon32.png">
+  <link rel="stylesheet" href="welcome.css">
+</head>
+<body>
+  <main>
+    <header><a class="brand" href="welcome.html">MIORNING</a><span>小小的收纳，大大的肚子。</span><span class="version">CAT KEEPER 0.3.1</span><nav class="language-links" aria-label="Language"><a href="?lang=zh" lang="zh-CN">中文</a><span>/</span><a href="?lang=en" lang="en">English</a></nav></header>
+    <section class="hero">
+      <div class="hero-copy"><p class="overline">给你的浏览器，养一只黑猫。</p><h1>图标太多？<br>让它<span>一口收好。</span></h1><p class="lede">贴边巡游，吃饱撞顶。<br>那些悬浮着的小入口，暂时住进它肚子里。</p><a class="jump" href="#how">带它回家 <span aria-hidden="true">↓</span></a></div>
+      <div class="portrait"><span class="orbit-label">装得下图标，藏不住尾巴。</span><div class="orbit" aria-hidden="true"></div><img src="assets/full-0.png" alt="吃饱后鼓成圆球的黑猫，戴着红围巾漂浮" width="380" height="400"><span class="portrait-note">并不努力，优秀收纳。</span></div>
+    </section>
+    <section id="how" class="guide-section"><div class="section-heading"><span class="number">01</span><h2>两种浏览器，同一只猫。</h2></div><ol class="install"><li><strong>先解压下载包</strong><p>保留整个文件夹。安装时选择其中的 <code>extension</code> 文件夹，里面可以看到 <code>manifest.json</code>。</p></li><li><strong>打开扩展管理</strong><div class="browser-address"><span>Chrome</span><code>chrome://extensions</code><button type="button" data-copy="chrome://extensions">复制</button></div><div class="browser-address"><span>Edge</span><code>edge://extensions</code><button type="button" data-copy="edge://extensions">复制</button></div></li><li><strong>开启开发者模式，加载扩展</strong><p>点击“加载已解压的扩展程序”，选择 <code>extension</code> 文件夹。然后打开或刷新一个普通网页。</p></li><li><strong>固定这一只猫</strong><p>在浏览器的扩展菜单里，固定“喵咛·收纳猫”，方便唤出黑猫右键菜单。其他插件的工具栏图标可以手动取消固定。</p></li></ol></section>
+    <section class="guide-section"><div class="section-heading"><span class="number">02</span><h2>右键猫，只有三件事。</h2></div><p class="plain-copy">右键黑猫或露出的尾巴：<strong>快捷键设置</strong>、<strong>收纳 / 释放图标</strong>、<strong>隐藏 / 显示黑猫</strong>。打开菜单时黑猫会停下来，两项动作旁显示当前快捷键。</p><div class="behaviors"><article><span class="step-symbol">↗</span><h3>抓到它，收好图标</h3><p>平时拄着拐杖慢慢走。鼠标靠近会先警觉、加快脚步，再逼近就随机骑电动车或翻滚逃走。快速抓到后点击，仍会吸入图标、鼓成圆球撞顶回弹。</p></article><article><span class="step-symbol">↘</span><h3>再抓一次，逐个放回</h3><p>吃饱的黑猫也会躲。再次点击，它会把图标一个个吐回原来的位置，再掉落、砸成饼、回弹，朝屏幕做个不服气的手势后接着走。</p></article><article><span class="step-symbol">⌁</span><h3>只剩尾巴，也能待命</h3><p>底下抓住三秒不点，它就藏；上面一圈后藏。</p></article></div><div class="shortcut-card"><p>不想追猫的时候</p><div><span>吸收 / 释放</span><kbd id="key-collect">Alt + Shift + K</kbd></div><div><span>隐藏 / 显示</span><kbd id="key-half">Alt + Shift + H</kbd></div><small>如快捷键未绑定或冲突，在浏览器扩展管理的“键盘快捷键”中修改。右键猫或尾巴即可操作；菜单里恰好三个选项。</small></div></section>
+    <section class="guide-section"><div class="section-heading"><span class="number">03</span><h2>让它认识其他图标。</h2></div><div class="plain-copy"><p>黑猫会通用扫描网页里的小型浮动入口，包括其他插件和网站自己的悬浮按钮；五款现有插件只是优先适配。未自动识别的图标，可以右键黑猫 → “快捷键设置” → 展开“收纳范围与其他设置” → 点击“点选其他悬浮图标”，再到网页里点选那个小按钮；按 Esc 取消。自选规则按网站保存，随时可以从列表移除。跨域 iframe 内部按钮与自绘 canvas 图标不能保证自动识别，可尝试点选可见的小型入口补收。</p><p>黑猫整理的是<strong>网页里面的悬浮按钮</strong>。地址栏旁边的浏览器工具栏图标，需要你手动取消固定。收纳不会卸载或停用其他插件；原来的快捷键、面板功能仍由原插件负责。</p><p>浏览器内置页面、扩展商店及部分受保护页面不能放猫。要在本地 HTML 页面使用，请在扩展详情里开启“允许访问文件网址”。</p><p>如果误选了网页元素，在右键设置里点“紧急放回全部图标”，再移除那条自选规则。关闭黑猫也会放回图标。</p><p>按住尾巴左右拖动，向页面里拉就能拔猫。</p><p>刷新或换页会沿用收纳状态、藏尾位置和显示偏好。</p><p>勾选图标旁的“显示”，它会立即放回，以后也不再被吞。</p></div></section>
+    <footer><span>MIORNING / 让页面喘口气。</span><span>所有动作帧随插件保存在本地，运行无需联网。</span></footer>
+    <p id="copy-status" class="copy-status" role="status" aria-live="polite"></p>
+  </main>
+  <script src="i18n.js"></script>
+  <script src="welcome.js"></script>
+</body>
+</html>
+
+
+

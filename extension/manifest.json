@@ -1,0 +1,89 @@
+{
+  "manifest_version": 3,
+  "name": "__MSG_extensionName__",
+  "version": "0.3.1",
+  "description": "__MSG_extensionDescription__",
+  "minimum_chrome_version": "110",
+  "permissions": [
+    "storage",
+    "activeTab",
+    "scripting"
+  ],
+  "host_permissions": [
+    "http://*/*",
+    "https://*/*",
+    "file:///*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "__MSG_extensionName__",
+    "default_icon": {
+      "16": "assets/icon16.png",
+      "32": "assets/icon32.png",
+      "48": "assets/icon48.png",
+      "128": "assets/icon128.png"
+    }
+  },
+  "icons": {
+    "16": "assets/icon16.png",
+    "32": "assets/icon32.png",
+    "48": "assets/icon48.png",
+    "128": "assets/icon128.png"
+  },
+  "commands": {
+    "toggle-collect": {
+      "suggested_key": {
+        "default": "Alt+Shift+K"
+      },
+      "description": "__MSG_collectDescription__"
+    },
+    "toggle-half": {
+      "suggested_key": {
+        "default": "Alt+Shift+H"
+      },
+      "description": "__MSG_hideDescription__"
+    }
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "http://*/*",
+        "https://*/*",
+        "file:///*"
+      ],
+      "js": [
+        "i18n.js",
+        "adapters.js",
+        "discovery.js",
+        "assets/v2/metrics.js",
+        "assets/v3/metrics.js",
+        "assets/v4/metrics.js",
+        "controls.js",
+        "engine.js",
+        "content.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "assets/*.png",
+        "assets/v2/*.png",
+        "assets/v3/*.png",
+        "assets/v4/*.png"
+      ],
+      "matches": [
+        "http://*/*",
+        "https://*/*",
+        "file:///*"
+      ]
+    }
+  ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'none'"
+  },
+  "default_locale": "en"
+}
